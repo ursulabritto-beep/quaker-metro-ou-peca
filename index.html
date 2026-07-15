@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metro ou peça? · Quaker Decor</title>
+<meta name="description" content="Calculadora de compra de tecidos Quaker: quando vale cortar por metro e quando vale fechar a peça.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;600;700&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --chalk:#EEF0EC; --chalk-2:#E3E7E2; --chalk-3:#D3D9D3;
+    --indigo:#16233C; --indigo-2:#2B3F63;
+    --graphite:#4A5259; --mute:#7B8489;
+    --pine:#2E6B5E; --marigold:#D9A322; --tape:#E8C24A;
+    --shadow:0 1px 0 rgba(22,35,60,.06), 0 8px 24px -12px rgba(22,35,60,.28);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--chalk); color:var(--graphite);
+    font-family:"Instrument Sans",system-ui,sans-serif; font-size:16px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 80px}
+  .mono{font-family:"DM Mono",ui-monospace,monospace;font-feature-settings:"tnum"}
+
+  /* header */
+  header{border-bottom:2px solid var(--indigo);padding-bottom:20px;margin-bottom:28px}
+  .eyebrow{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  h1{font-family:"Familjen Grotesk",sans-serif;font-weight:700;color:var(--indigo);
+     font-size:clamp(38px,7vw,64px);line-height:.98;letter-spacing:-.02em;margin:8px 0 10px}
+  h1 em{font-style:normal;color:var(--marigold)}
+  .lede{max-width:56ch;font-size:15px;color:var(--graphite)}
+
+  /* controls */
+  .controls{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:8px}
+  @media(max-width:720px){.controls{grid-template-columns:1fr}}
+  .field label{display:block;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+  .field select,.field input{
+    width:100%;padding:11px 12px;border:1.5px solid var(--chalk-3);border-radius:3px;background:#fff;
+    font-family:"DM Mono",monospace;font-size:15px;color:var(--indigo);
+  }
+  .field select:focus,.field input:focus,.slider:focus-visible{outline:2.5px solid var(--marigold);outline-offset:1px}
+  .hint{font-size:12px;color:var(--mute);margin-top:5px;min-height:1.2em}
+  .hint b{color:var(--indigo);font-weight:600}
+
+  /* tape panel */
+  .panel{background:#fff;border:1.5px solid var(--chalk-3);border-radius:4px;padding:20px 18px 8px;margin:22px 0;box-shadow:var(--shadow)}
+  .panel-top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+  .panel-title{font-family:"Familjen Grotesk",sans-serif;font-weight:600;color:var(--indigo);font-size:17px}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--mute);font-family:"DM Mono",monospace}
+  .legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
+  svg{display:block;width:100%;height:auto;touch-action:none;cursor:ew-resize}
+  .slider{width:100%;margin:14px 0 4px;accent-color:var(--indigo)}
+
+  /* verdict */
+  .verdict{border:1.5px solid var(--chalk-3);border-left:6px solid var(--indigo);border-radius:4px;
+    background:#fff;padding:22px;box-shadow:var(--shadow)}
+  .verdict.peca{border-left-color:var(--pine)}
+  .verdict.metro{border-left-color:var(--indigo-2)}
+  .call{font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:clamp(26px,4.4vw,38px);
+    line-height:1.05;letter-spacing:-.015em;color:var(--indigo);margin:0 0 6px}
+  .call .accent{color:var(--pine)}
+  .because{font-size:15px;max-width:62ch;margin:0 0 18px}
+  .nums{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--chalk-3);border:1px solid var(--chalk-3);border-radius:3px;overflow:hidden}
+  @media(max-width:720px){.nums{grid-template-columns:1fr 1fr}}
+  .num{background:#fff;padding:12px 14px}
+  .num dt{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+  .num dd{margin:0;font-family:"DM Mono",monospace;font-size:19px;color:var(--indigo);font-weight:500}
+  .num dd small{font-size:12px;color:var(--mute);font-weight:400}
+  .btn{margin-top:18px;background:var(--indigo);color:#fff;border:0;border-radius:3px;padding:11px 18px;
+    font-family:"Instrument Sans",sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+  .btn:hover{background:var(--indigo-2)}
+  .btn:focus-visible{outline:2.5px solid var(--marigold);outline-offset:2px}
+
+  /* table */
+  h2{font-family:"Familjen Grotesk",sans-serif;color:var(--indigo);font-size:22px;margin:44px 0 4px;letter-spacing:-.01em}
+  .sub{font-size:14px;color:var(--mute);margin:0 0 14px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--mute);text-align:right;padding:8px 10px;border-bottom:1.5px solid var(--indigo);font-weight:400}
+  th:first-child{text-align:left}
+  td{padding:9px 10px;border-bottom:1px solid var(--chalk-2);text-align:right;font-family:"DM Mono",monospace}
+  td:first-child{text-align:left;font-family:"Instrument Sans",sans-serif;font-weight:500;color:var(--indigo);cursor:pointer}
+  td:first-child:hover{text-decoration:underline}
+  tr.off td:first-child::after{content:" · fora da 2026";font-family:"DM Mono",monospace;font-size:10px;color:var(--marigold);font-weight:400}
+  .bar{position:relative;display:block;height:16px;background:var(--chalk-2);border-radius:2px;overflow:hidden}
+  .bar span{position:absolute;left:0;top:0;bottom:0;background:var(--pine);opacity:.8}
+  .bar b{position:absolute;right:5px;top:0;font-size:11px;line-height:16px;color:var(--indigo);font-weight:500}
+
+  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--chalk-3);font-size:12.5px;color:var(--mute);max-width:70ch}
+  footer b{color:var(--graphite)}
+
+  /* combobox de busca */
+  .combo{position:relative}
+  .combo-box{position:relative;display:flex;align-items:center}
+  .combo-box input{padding-right:78px;font-family:"Instrument Sans",sans-serif;font-weight:500}
+  .combo-box input::placeholder{font-weight:400;color:var(--mute)}
+  .combo.aberto .combo-box input{border-color:var(--indigo);border-bottom-left-radius:0;border-bottom-right-radius:0}
+  .combo-acao{position:absolute;right:6px;display:flex;gap:2px}
+  .combo-acao button{background:none;border:0;padding:6px;cursor:pointer;color:var(--mute);
+    display:flex;align-items:center;border-radius:3px;line-height:0}
+  .combo-acao button:hover{color:var(--indigo);background:var(--chalk-2)}
+  .combo-acao button:focus-visible{outline:2px solid var(--marigold);outline-offset:1px}
+  .combo.aberto .chev{transform:rotate(180deg)}
+  .chev{transition:transform .15s ease}
+  #limpar[hidden]{display:none}
+  .lista{position:absolute;z-index:30;left:0;right:0;top:calc(100% - 1px);margin:0;padding:4px;
+    list-style:none;background:#fff;border:1.5px solid var(--indigo);border-radius:0 0 4px 4px;
+    max-height:340px;overflow-y:auto;box-shadow:0 18px 34px -14px rgba(22,35,60,.4)}
+  .lista[hidden]{display:none}
+  .opt{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    padding:9px 10px;border-radius:3px;cursor:pointer}
+  .opt[aria-selected="true"]{background:var(--chalk-2)}
+  .opt.ativo{background:var(--indigo);color:#fff}
+  .opt.ativo .opt-sub,.opt.ativo .opt-metro{color:#B9C4D6}
+  .opt.ativo mark{background:var(--tape);color:var(--indigo)}
+  .opt-nome{font-weight:600;color:inherit;font-size:14.5px}
+  .opt.ativo .opt-nome{color:#fff}
+  .opt-sub{display:block;font-size:11.5px;color:var(--mute);margin-top:2px;
+    max-width:32ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt-dir{text-align:right;flex:none;font-family:"DM Mono",monospace;font-size:12px}
+  .opt-metro{color:var(--mute)}
+  .opt-desc{display:block;font-weight:500;font-size:13px;margin-top:2px}
+  .opt mark{background:var(--tape);color:inherit;padding:0 1px;border-radius:2px}
+  .vazio{padding:14px 10px;font-size:13.5px;color:var(--mute)}
+  .contagem{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--mute);padding:6px 10px 4px}
+
+  .filtro-linha{display:flex;gap:12px;align-items:center;margin:0 0 12px}
+  .filtro-linha input{flex:1;max-width:340px;padding:9px 12px;border:1.5px solid var(--chalk-3);
+    border-radius:3px;background:#fff;font-family:"Instrument Sans",sans-serif;font-size:14px;color:var(--indigo)}
+  .filtro-linha input:focus{outline:2.5px solid var(--marigold);outline-offset:1px}
+  .filtro-linha span{font-family:"DM Mono",monospace;font-size:12px;color:var(--mute)}
+  @media(prefers-reduced-motion:no-preference){
+    .k-move{transition:transform .18s ease}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Quaker Decor · tabela 2026 · preços de peça da tabela 2025</div>
+  <h1>Metro ou <em>peça?</em></h1>
+  <p class="lede">Busque o tecido pelo nome, pela cor ou pelo tipo, diga quantos metros o projeto pede e veja onde a peça fechada passa a sair mais barata que o corte por metro.</p>
+</header>
+
+<div class="controls">
+  <div class="field combo" id="combo">
+    <label for="busca">Tecido</label>
+    <div class="combo-box">
+      <input id="busca" type="text" role="combobox" aria-expanded="false" aria-controls="lista"
+             aria-autocomplete="list" aria-haspopup="listbox" autocomplete="off" spellcheck="false"
+             placeholder="Buscar por nome, cor ou tipo">
+      <span class="combo-acao">
+        <button type="button" id="limpar" aria-label="Limpar busca" hidden>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+        </button>
+        <button type="button" id="abrir" aria-label="Ver todos os tecidos" tabindex="-1">
+          <svg class="chev" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 6L8 10.5 12.5 6"/></svg>
+        </button>
+      </span>
+    </div>
+    <ul class="lista" id="lista" role="listbox" aria-label="Tecidos com opção de peça" hidden></ul>
+    <div class="hint" id="hintTecido"></div>
+  </div>
+  <div class="field">
+    <label for="dolar">Dólar comercial (R$)</label>
+    <input id="dolar" class="mono" type="number" step="0.01" min="3" max="9" value="5.08">
+    <div class="hint" id="hintDolar"></div>
+  </div>
+  <div class="field">
+    <label for="rolo">Metragem da peça (m)</label>
+    <input id="rolo" class="mono" type="number" step="1" min="3" max="120" value="30">
+    <div class="hint">Confirmar com o comercial</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-top">
+    <div class="panel-title">Quanto você gasta, metro a metro</div>
+    <div class="legend">
+      <span><i style="background:var(--indigo-2)"></i>cortar por metro</span>
+      <span><i style="background:var(--pine)"></i>fechar a peça</span>
+    </div>
+  </div>
+  <svg id="fita" viewBox="0 0 900 340" role="img" aria-labelledby="fitaDesc">
+    <desc id="fitaDesc">Comparação de custo: linha do corte por metro contra o custo fixo da peça fechada, sobre uma fita métrica.</desc>
+  </svg>
+  <label for="metros" class="eyebrow" style="display:block;margin-top:6px">Metros que o projeto pede</label>
+  <input id="metros" class="slider" type="range" min="1" max="30" step="1" value="8">
+</div>
+
+<div class="verdict" id="verdict">
+  <p class="call" id="call">—</p>
+  <p class="because" id="because"></p>
+  <dl class="nums">
+    <div class="num"><dt>Cortando por metro</dt><dd id="nMetro">—</dd></div>
+    <div class="num"><dt>Fechando a peça</dt><dd id="nPeca">—</dd></div>
+    <div class="num"><dt>Diferença</dt><dd id="nDif">—</dd></div>
+    <div class="num"><dt>Vira conta a partir de</dt><dd id="nBreak">—</dd></div>
+  </dl>
+  <button class="btn" id="copiar">Copiar resumo</button>
+</div>
+
+<h2>Os 41 tecidos com opção de peça</h2>
+<p class="sub">Desconto da peça sobre o preço por metro, na faixa de dólar acima. Clique no nome para carregar na calculadora.</p>
+<div class="filtro-linha">
+  <input id="filtro" type="search" placeholder="Filtrar a lista" aria-label="Filtrar a lista de tecidos">
+  <span id="contaTabela"></span>
+</div>
+<table>
+  <thead><tr>
+    <th>Tecido</th><th>Metro</th><th>Peça (R$/m)</th><th>Desconto</th><th>Compensa a partir de</th>
+  </tr></thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<footer>
+  <p><b>De onde vêm os números.</b> Preço por metro: aba TABELA GERAL da tabela Quaker 2026. Preço da peça: aba PEÇAS da tabela 2025 — a tabela 2026 não traz essa aba, então peça a versão atualizada ao comercial antes de fechar pedidos grandes. 5 tecidos (BURL, EFFIE, OSSA, SACKCLOTH, SLUBBY) têm preço de peça mas saíram da tabela 2026.</p>
+  <p><b>O que não está aqui.</b> A metragem real da peça fechada não consta em nenhuma das tabelas — o padrão de 30 m é um chute editável. Itens marcados com * ou ** na tabela têm IPI de 3,25% ou 9,75% por cima, que incide igual nos dois caminhos e não muda a decisão. Pedidos por metro têm mínimo de 1 m e vão de metro em metro.</p>
+</footer>
+
+</div>
+
+<script>
+const DADOS = [["AGATE",112,[65,82,95,100,105,112],1,"SILVER","CHENILLE","PEARLY GUARDIAN / SILVER GUARDIAN"],["ALF",261,[179,199,209,215,221,227],1,"GREY / LINEN / OFFWHITE","JACQUARD ÁREA EXTERNA","LINEN"],["ANTARCTICA",120,[65,82,95,100,105,112],1,"WHITE / BEIGE / GREY / BLUE","BOUCLÉ","BEIGE GUARDIAN / BLUE GUARDIAN / GREY GUARDIAN / WHITE GUARDIAN"],["BENCHMARK",212,[155,169,183,190,195,199],1,"PACIFIC / STONE / MOUSE / CHINCHILLA","TEXTURA","01 PACIFIC / 09 STONE / 13 MOUSE / 14 CHINCHILLA"],["BURL",80,[59,64,68,74,78,80],0,"TAUPE / WHITE / BEIGE","CHENILLE","BEIGE GUARDIAN / WHITE GUARDIAN"],["COVERLET",212,[125,145,157,163,169,175],1,"OASIS / SNOW / WOOL / MARBLE / MIST","CHENILLE","SNOW / MARBLE / MIST / OASIS / WOOL"],["CRAFTED",138,[75,89,99,105,111,117],1,"PEBBLE / SAND / GLAZE / IVORY","TEXTURA","GLAZE"],["DEGREE",80,[37,47,51,57,63,69],1,"NATURAL / SILVERGREY","TEXTURA","CHARCOAL / NATURAL / SILVERGREY"],["DELUXE",212,[132,138,150,156,162,168],1,"FEATHER / DOVE / HAVANA / NOUGAT / PEACOCK / AUTUMN / VINO / CELADON / CYPRESS / SCUBA","VELUDO","01 FEATHER / 02 DOVE / 07 HAVANA / 11 NOUGAT / 15 PEACOCK / 21 AUTUMN / 24 VINO / 31 CELADON / CYPRESS / SCUBA"],["EFFIE",80,[35,44,51,57,63,71],0,"WHITE / FENDI / MUSTARD / TERRACOTTA / BRICK / SPA / ICE / GREY / LINEN / INDIGO / SEAFOAM / WINE / MANGO","TEXTURA","GREY GUARDIAN / ICE GUARDIAN / LINEN GUARDIAN / TERRACOTTA GUARDIAN"],["EL ANGOLA 04",288,[179,199,215,221,227,233],1,"BEIGE / GREY / GREEN / BLUE / OFFWHITE / CARAMEL / COOPER / WHITE / SNOW","BOUCLE","GREEN / BEIGE / BLUE"],["EL LUDA 09",212,[149,156,168,174,180,186],1,"OLD ROSE / JEANS V / LINEN A / PLATINUM","TEXTURA","M JEANS / M LINEN / M OLD ROSE / M PLATINUM"],["EL MALIBU VELVET",288,[179,199,215,221,227,233],1,"AQUA / GREY / GRAPHITE / BLUE / OLIVE / VIOLET / ROSE / CORAL / CANDY ORANGE / OLD ROSE / MINT / ICE / OCRHE","VELUDO","ROSE / AQUA / BLUE / CANDY ORANGE / CORAL / GRAPHITE / GREY / ICE / MINT / OCHRE / OLD ROSE / OLIVE / VIOLET"],["EL MEDA",170,[98,102,111,117,123,129],1,"CELADON / AQUA / MIDNIGHT / BLUE / BLACK / DARKGREY / GREY / BEIGE / WHITE / GOLD / TANGERINE / ROSE / ICE / NAVY","VELUDO","AQUA / BEIGE / BLACK / BLUE / CELADON / DARKGREY / GOLD / GREY / ICE / MIDNIGHT / NAVY / ROSE / TANGERINE / WHITE"],["EL MONA RC",170,[107,112,121,127,133,140],1,"GREY / CELADON / BOTTLE GREEN / HUNTER GREEN / OLIVE / TERRACOTA / BEIGE / DARKPURPLE / RED WINE / GOLD / SNOW / KHAKI / STONE","VELUDO RECICLADO","BEIGE / BOTTLE GREEN / CELADON / DARKPURPLE / GOLD / GREY / HUNTER GREEN / OLIVE / RED WINE / TERRACOTA"],["EL NOVE 04",212,[159,169,183,189,195,201],1,"AQUA / BLUE / GREY / GOLD / TANGERINE / ROSE","TEXTURA","AQUA / BLUE / GOLD / GREY / ROSE / TANGERINE"],["ELB LUDA 129",212,[150,157,170,176,182,189],1,"LINEN / GREY / SILVER / JEANS / AQUA / CHERRY","TEXTURA","AQUA / CHERRY / GREY / JEANS / LINEN / SILVER"],["FLEECE",225,[129,162,186,190,194,198],1,"NATURAL / BEAR","PELE SINTÉTICA","BEAR / NATURAL"],["FOOTLOOSE",182,[77,96,111,117,123,129],1,"ALABASTER / TAUPE / EMERALD","BOUCLE","ALABASTER"],["GALACTICA",225,[119,129,140,146,152,158],1,"WHITE","TEXTURA","INDIGO / WHITE"],["JACKPOT",80,[41,51,59,66,70,75],1,"WHITELINEN / GREY & WHITE / GREY / TERRACOTA / TEALGREEN","TEXTURA","GREY / TEALGREEN / TERRACOTTA / WHITE&GREY / WHITELINEN"],["KEYSTONE",170,[113,118,128,134,140,146],1,"ICE / SAND / MIST / SHARK / GRIFFIN / NAVY / LEAF","TEXTURA","02 SHARK / 05 MIST / 09 ICE / 12 SAND / 18 GRIFFIN / 20 NAVY / 27 LEAF"],["KUMA",212,[92,96,104,110,116,122],1,"DARK GREY","TEXTURA","DARK GREY"],["MALAGA",192,[85,107,124,130,136,142],1,"WHITE & GREY / WHITE & BLACK / TEAL / TERRACOTTA / WHITE","TEXTURA","WHITE GUARDIAN"],["MALLORCA",192,[94,109,129,130,136,142],1,"GREEN / BEIGE","TEXTURA","BEIGE GUARDIAN"],["MARLEY",80,[54,57,62,66,70,75],1,"SNOW / SMOKE / GREY","TEXTURA","GREY / SMOKE / SNOW"],["MILANO",149,[70,80,86,96,107,114],1,"PEARL / BEIGE / LT STONE / ONYX","TEXTURA","BEIGE / LT STONE / ONYX / PEARL"],["MILLIONAIRE",138,[75,89,99,105,111,117],1,"IVORY / TAUPE / CORAL / TEAL / GOLD / COOPER","TEXTURA","IVORY"],["MONTANA",192,[89,112,129,135,141,147],1,"GARNET / NATURAL","BOUCLÉ","NATURAL GUARDIAN"],["NUBBY",240,[139,149,161,167,173,180],1,"CRAKED WHITE / GRAPHITE / PLATINUM","TEXTURA","CHARCOAL / CRAKED WHITE / GRAPHITE / LINEN GUARDIAN / OFFWHITE GUARDIAN / SLUBBY NATURAL GUARDIAN / SLUBBY SILVER GUARDIAN"],["O'SHUTTLE",170,[95,99,106,112,118,224],1,"SISAL","TEXTURA ÁREA EXTERNA","SISAL"],["OCTAVIA",297,[199,209,226,238,248,259],1,"CALICO / MULBERRY / GRAPE / NAVY","TEXTURA","10 CALICO / 02 NAVY / 36 MULBERRY / 38 GRAPE"],["OMNI",170,[98,102,111,117,123,130],1,"PLAZA / FLAX / SAND / CLOUD / EMERALD","TEXTURA","08 PLAZA / 10 FLAX / 11 SAND / 18 CLOUD / 23 EMERALD"],["OSSA",80,[39,49,57,63,70,76],0,"IVORY / BRICK / MOSS / DRIFTWOOD","TEXTURA","DRIFTWOOD / IVORY"],["PORTOFINO",122,[46,56,61,66,72,76],1,"BLUE","TEXTURA","BLUE / GRAPE"],["SACKCLOTH",149,[91,99,107,113,119,123],0,"DARKSAGE / GRESTONE","TEXTURA","DARKSAGE / GREYSTONE"],["SHERPA",80,[30,40,43,47,52,58],1,"NATURAL / INDIGO / GRANITE","TEXTURA","INDIGO / GRANITE / NATURAL"],["SLUBBY",112,[74,82,95,111,117,123],0,"NATURAL","TEXTURA","NATURAL GUARDIAN"],["TEXAN",136,[82,95,105,111,117,123],1,"WHITE / GREY MIX / BLUE MIX / BURNISH","BOUCLÉ","WHITE GUARDIAN"],["VERSAILLES",142,[52,57,66,72,78,84],1,"WHITE / GREEN / TEAL / BEIGE","CHENILLE","BEIGE / GREEN / TEAL / WHITE"],["VILLA OLMO",237,[139,149,161,167,173,179],1,"NATURAL / SILVER / UMBER / OCRE","LINHO MISTO","NATURAL / OCHRE / SILVER / UMBER"]];
+
+const FAIXAS = [
+  {min:0,    max:5.20, nome:"R$ 5,00 a R$ 5,20"},
+  {min:5.20, max:5.50, nome:"R$ 5,20 a R$ 5,50"},
+  {min:5.50, max:5.75, nome:"R$ 5,50 a R$ 5,75"},
+  {min:5.75, max:6.00, nome:"R$ 5,75 a R$ 6,00"},
+  {min:6.00, max:6.25, nome:"R$ 6,00 a R$ 6,25"},
+  {min:6.25, max:99,   nome:"R$ 6,25 a R$ 6,50"}
+];
+
+const $ = id => document.getElementById(id);
+const chave = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// procura todos os termos digitados no nome, nas cores e no tipo do tecido
+function combina(i, termos){
+  const f = DADOS[i];
+  const palheiro = chave(f[0]+' '+f[4]+' '+f[5]+' '+f[6]);
+  return termos.every(t => palheiro.includes(t));
+}
+function termosDe(q){ return chave(q).split(/\s+/).filter(Boolean); }
+function realcar(texto, termos){
+  let out = esc(texto);
+  for(const t of termos){
+    if(!t) continue;
+    const alvo = chave(out);
+    let p = alvo.indexOf(t);
+    if(p<0 || /<[^>]*$/.test(out.slice(0,p))) continue;
+    out = out.slice(0,p)+'<mark>'+out.slice(p,p+t.length)+'</mark>'+out.slice(p+t.length);
+  }
+  return out;
+}
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const brl2 = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const met = v => v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' m';
+const pct = v => (v*100).toLocaleString('pt-BR',{maximumFractionDigits:0})+'%';
+
+function faixaDe(d){
+  for(let i=0;i<FAIXAS.length;i++) if(d < FAIXAS[i].max) return i;
+  return 5;
+}
+
+// ---- estado
+const st = {i:0, dolar:5.08, rolo:30, metros:8};
+
+function atual(){
+  const f = DADOS[st.i];
+  const fx = faixaDe(st.dolar);
+  const pm = f[1], pp = f[2][fx];
+  const custoRolo = pp*st.rolo;
+  const breakEven = st.rolo*pp/pm;          // metros que precisam ser usados p/ empatar
+  return {nome:f[0], cores:f[4], tipo:f[5], na26:f[3]===1, fx, pm, pp,
+          custoRolo, breakEven, desconto: pp/pm-1,
+          custoMetro: st.metros*pm,
+          pecaVence: st.metros > breakEven && pp < pm};
+}
+
+// ---- desenho da fita
+const NS='http://www.w3.org/2000/svg';
+function el(n,at){const e=document.createElementNS(NS,n);for(const k in at)e.setAttribute(k,at[k]);return e;}
+
+function desenhar(){
+  const a = atual();
+  const svg = $('fita');
+  while(svg.lastChild && svg.lastChild.nodeName!=='desc') svg.removeChild(svg.lastChild);
+
+  const W=900,H=340, L=64, R=26, T=22, tapeY=272, tapeH=42;
+  const maxY = Math.max(st.rolo*a.pm, a.custoRolo)*1.06;
+  const x = m => L + (m/st.rolo)*(W-L-R);
+  const y = v => tapeY-14 - (v/maxY)*(tapeY-14-T);
+
+  // grade + eixo de custo
+  for(let g=0; g<=4; g++){
+    const v = maxY*g/4;
+    svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:'#E3E7E2','stroke-width':1}));
+    const t = el('text',{x:L-9,y:y(v)+4,'text-anchor':'end',fill:'#7B8489','font-size':11,'font-family':'DM Mono, monospace'});
+    t.textContent = g===0?'0':brl(v); svg.appendChild(t);
+  }
+
+  // fita métrica
+  svg.appendChild(el('rect',{x:L,y:tapeY,width:W-L-R,height:tapeH,fill:'#E8C24A',rx:2}));
+  svg.appendChild(el('rect',{x:L,y:tapeY,width:W-L-R,height:tapeH,fill:'none',stroke:'#16233C','stroke-width':1.5,rx:2}));
+  const passo = st.rolo>60?5:1;
+  for(let m=0;m<=st.rolo;m+=passo){
+    const grande = m%5===0;
+    svg.appendChild(el('line',{x1:x(m),x2:x(m),y1:tapeY,y2:tapeY+(grande?15:8),stroke:'#16233C','stroke-width':grande?1.6:.9}));
+    if(grande && (st.rolo<=40 || m%10===0)){
+      const t=el('text',{x:x(m),y:tapeY+31,'text-anchor':'middle',fill:'#16233C','font-size':12,'font-family':'DM Mono, monospace'});
+      t.textContent=m; svg.appendChild(t);
+    }
+  }
+
+  // linha da peça (custo fixo) + área
+  svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(a.custoRolo),y2:y(a.custoRolo),stroke:'#2E6B5E','stroke-width':2.5}));
+  const lp=el('text',{x:W-R-4,y:y(a.custoRolo)-8,'text-anchor':'end',fill:'#2E6B5E','font-size':12,'font-family':'DM Mono, monospace','font-weight':500});
+  lp.textContent='peça fechada '+brl(a.custoRolo); svg.appendChild(lp);
+
+  // linha do metro
+  svg.appendChild(el('line',{x1:x(0),x2:x(st.rolo),y1:y(0),y2:y(st.rolo*a.pm),stroke:'#2B3F63','stroke-width':2.5}));
+  const lm=el('text',{x:x(st.rolo)-4,y:y(st.rolo*a.pm)-9,'text-anchor':'end',fill:'#2B3F63','font-size':12,'font-family':'DM Mono, monospace','font-weight':500});
+  lm.textContent='metro '+brl2(a.pm)+'/m'; svg.appendChild(lm);
+
+  // cruzamento
+  if(a.breakEven<=st.rolo && a.pp<a.pm){
+    const bx=x(a.breakEven);
+    svg.appendChild(el('line',{x1:bx,x2:bx,y1:y(a.custoRolo),y2:tapeY,stroke:'#16233C','stroke-width':1,'stroke-dasharray':'3 4'}));
+    svg.appendChild(el('circle',{cx:bx,cy:y(a.custoRolo),r:5,fill:'#fff',stroke:'#16233C','stroke-width':2}));
+    const bt=el('text',{x:bx,y:y(a.custoRolo)-14,'text-anchor':'middle',fill:'#16233C','font-size':12,'font-family':'DM Mono, monospace','font-weight':500});
+    bt.textContent='vira conta em '+met(a.breakEven); svg.appendChild(bt);
+  }
+
+  // marcador dos metros pedidos
+  const mx=x(st.metros);
+  svg.appendChild(el('line',{x1:mx,x2:mx,y1:T-8,y2:tapeY+tapeH,stroke:'#16233C','stroke-width':2}));
+  const cap=el('rect',{x:mx-30,y:T-22,width:60,height:18,fill:'#16233C',rx:2});
+  svg.appendChild(cap);
+  const ct=el('text',{x:mx,y:T-9,'text-anchor':'middle',fill:'#fff','font-size':11.5,'font-family':'DM Mono, monospace'});
+  ct.textContent=st.metros+' m'; svg.appendChild(ct);
+  svg.appendChild(el('circle',{cx:mx,cy:y(a.custoMetro),r:5.5,fill:'#2B3F63',stroke:'#fff','stroke-width':2}));
+}
+
+// ---- verdito
+function render(){
+  const a = atual();
+  desenhar();
+
+  if(!cb.aberto) $('busca').value = a.nome;
+  $('hintTecido').innerHTML = a.tipo + (a.cores?' · '+a.cores:'') + (a.na26?'':' · <b>fora da tabela 2026</b>');
+  $('hintDolar').innerHTML = 'Faixa <b>'+FAIXAS[a.fx].nome+'</b>';
+  $('metros').max = st.rolo;
+
+  const v=$('verdict'), dif=a.custoRolo-a.custoMetro;
+  v.className = 'verdict '+(a.pecaVence?'peca':'metro');
+
+  if(a.pp>=a.pm){
+    $('call').innerHTML = 'Corte por metro.';
+    $('because').textContent = 'Com o dólar nessa faixa, a peça de '+a.nome+' sai a '+brl2(a.pp)+' o metro, contra '+brl2(a.pm)+' cortando. Fechar peça aqui só imobiliza dinheiro sem desconto nenhum.';
+  } else if(a.pecaVence){
+    const sobra = st.rolo-a.breakEven;
+    $('call').innerHTML = 'Feche a <span class="accent">peça</span>.';
+    $('because').textContent = 'Os '+st.metros+' m que você precisa já passam do ponto de equilíbrio ('+met(a.breakEven)+'). Você economiza '+brl(-dif)+' e ainda sobram '+met(st.rolo-st.metros)+' de tecido no estoque. Dá para desperdiçar até '+met(sobra)+' da peça e ainda assim ter valido a pena.';
+  } else {
+    const faltam = Math.ceil(a.breakEven)-st.metros;
+    $('call').innerHTML = 'Corte por metro.';
+    $('because').textContent = 'Para '+st.metros+' m, a peça custaria '+brl(dif)+' a mais. Ela só passa a compensar a partir de '+met(a.breakEven)+' — faltam '+faltam+' m de demanda. Se houver outro projeto na fila usando o mesmo tecido, vale somar antes de decidir.';
+  }
+  $('nMetro').innerHTML = brl(a.custoMetro)+' <small>'+st.metros+' m</small>';
+  $('nPeca').innerHTML = brl(a.custoRolo)+' <small>'+st.rolo+' m · '+pct(a.desconto)+'</small>';
+  $('nDif').innerHTML = (dif<0?'−':'+')+brl(Math.abs(dif));
+  $('nBreak').innerHTML = a.pp<a.pm ? met(a.breakEven)+' <small>usados</small>' : '—';
+}
+
+// ---- tabela
+function tabela(){
+  const fx = faixaDe(st.dolar);
+  const termos = termosDe($('filtro').value);
+  const linhas = DADOS.map((f,i)=>({i,nome:f[0],pm:f[1],pp:f[2][fx],off:f[3]===0}))
+    .filter(o=>!termos.length || combina(o.i, termos))
+    .map(o=>({...o,desc:o.pp/o.pm-1,be:st.rolo*o.pp/o.pm}))
+    .sort((x,z)=>x.desc-z.desc);
+  $('contaTabela').textContent = termos.length ? linhas.length+(linhas.length===1?' tecido':' tecidos')+' de 41' : '';
+  if(!linhas.length){
+    $('tbody').innerHTML = '<tr><td colspan="5" class="vazio" style="text-align:left">Nenhum tecido com esse termo.</td></tr>';
+    return;
+  }
+  $('tbody').innerHTML = linhas.map(o=>`
+    <tr class="${o.off?'off':''}">
+      <td data-i="${o.i}">${realcar(o.nome, termos)}</td>
+      <td>${brl2(o.pm)}</td>
+      <td>${brl2(o.pp)}</td>
+      <td><span class="bar"><span style="width:${Math.max(0,Math.min(100,-o.desc*140))}%;background:${o.desc<0?'var(--pine)':'var(--marigold)'}"></span><b>${o.desc>0?'+':''}${pct(o.desc)}</b></span></td>
+      <td>${o.pp<o.pm?met(o.be):'nunca'}</td>
+    </tr>`).join('');
+  $('tbody').querySelectorAll('td[data-i]').forEach(td=>{
+    td.onclick = () => {
+      escolher(+td.dataset.i);
+      $('combo').scrollIntoView({behavior:'smooth', block:'center'});
+    };
+  });
+}
+
+// ---- combobox com busca
+const cb = {aberto:false, ativo:-1, achados:[]};
+
+function ordenados(){
+  const fx = faixaDe(st.dolar);
+  return DADOS.map((f,i)=>({i, nome:f[0], desc:f[2][fx]/f[1]-1, pm:f[1], sub:f[5]+(f[4]?' · '+f[4]:'')}))
+              .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+}
+
+function pintarLista(){
+  const q = $('busca').value.trim();
+  const termos = cb.digitando ? termosDe(q) : [];
+  cb.achados = ordenados().filter(o => !termos.length || combina(o.i, termos));
+
+  if(!cb.achados.length){
+    $('lista').innerHTML = '<li class="vazio">Nenhum tecido com “'+esc(q)+'”. Só os 41 tecidos com opção de peça aparecem aqui — os outros a Quaker vende apenas por metro.</li>';
+    cb.ativo = -1; return;
+  }
+  const cabeca = termos.length
+    ? '<li class="contagem">'+cb.achados.length+(cb.achados.length===1?' tecido':' tecidos')+'</li>'
+    : '<li class="contagem">41 tecidos com opção de peça</li>';
+  $('lista').innerHTML = cabeca + cb.achados.map((o,n)=>`
+    <li class="opt ${n===cb.ativo?'ativo':''}" id="opt-${o.i}" role="option"
+        aria-selected="${o.i===st.i}" data-i="${o.i}" data-n="${n}">
+      <span>
+        <span class="opt-nome">${realcar(o.nome, termos)}</span>
+        <span class="opt-sub">${realcar(o.sub, termos)}</span>
+      </span>
+      <span class="opt-dir">
+        <span class="opt-metro">${brl2(o.pm)}/m</span>
+        <span class="opt-desc" style="color:${o.desc<0?'var(--pine)':'var(--marigold)'}">${o.desc>0?'+':''}${pct(o.desc)}</span>
+      </span>
+    </li>`).join('');
+  $('lista').querySelectorAll('.opt').forEach(li=>{
+    li.addEventListener('mousedown', e=>e.preventDefault());
+    li.addEventListener('click', ()=>escolher(+li.dataset.i));
+    li.addEventListener('mousemove', ()=>{ cb.ativo=+li.dataset.n; marcarAtivo(); });
+  });
+}
+
+function marcarAtivo(){
+  $('lista').querySelectorAll('.opt').forEach(li=>li.classList.toggle('ativo', +li.dataset.n===cb.ativo));
+  const li = $('lista').querySelector('.opt.ativo');
+  if(li){ li.scrollIntoView({block:'nearest'}); $('busca').setAttribute('aria-activedescendant', li.id); }
+  else $('busca').removeAttribute('aria-activedescendant');
+}
+
+function abrir(){
+  cb.aberto = true; $('combo').classList.add('aberto');
+  $('lista').hidden = false; $('busca').setAttribute('aria-expanded','true');
+  cb.ativo = cb.digitando ? 0 : Math.max(0, ordenados().findIndex(o=>o.i===st.i));
+  pintarLista(); marcarAtivo();
+}
+function fechar(){
+  cb.aberto = false; cb.digitando = false; $('combo').classList.remove('aberto');
+  $('lista').hidden = true; $('busca').setAttribute('aria-expanded','false');
+  $('busca').removeAttribute('aria-activedescendant');
+  $('busca').value = DADOS[st.i][0];
+  $('limpar').hidden = true;
+}
+function escolher(i){ st.i = i; fechar(); render(); }
+
+$('busca').addEventListener('input', ()=>{
+  cb.digitando = true; $('limpar').hidden = !$('busca').value;
+  if(!cb.aberto) abrir(); else { cb.ativo = 0; pintarLista(); marcarAtivo(); }
+});
+$('busca').addEventListener('focus', ()=>{ $('busca').select(); if(!cb.aberto) abrir(); });
+$('busca').addEventListener('keydown', e=>{
+  const n = cb.achados.length;
+  if(e.key==='ArrowDown' || e.key==='ArrowUp'){
+    e.preventDefault();
+    if(!cb.aberto) return abrir();
+    if(!n) return;
+    cb.ativo = e.key==='ArrowDown' ? (cb.ativo+1)%n : (cb.ativo-1+n)%n;
+    marcarAtivo();
+  } else if(e.key==='Home' && cb.aberto){ e.preventDefault(); cb.ativo=0; marcarAtivo(); }
+  else if(e.key==='End' && cb.aberto){ e.preventDefault(); cb.ativo=n-1; marcarAtivo(); }
+  else if(e.key==='Enter'){
+    e.preventDefault();
+    if(cb.aberto && cb.achados[cb.ativo]) escolher(cb.achados[cb.ativo].i);
+  } else if(e.key==='Escape'){ if(cb.aberto){ e.preventDefault(); fechar(); } }
+  else if(e.key==='Tab'){ if(cb.aberto) fechar(); }
+});
+$('abrir').addEventListener('mousedown', e=>{
+  e.preventDefault();
+  if(cb.aberto) fechar(); else { $('busca').focus(); cb.digitando=false; abrir(); }
+});
+$('limpar').addEventListener('mousedown', e=>{
+  e.preventDefault(); $('busca').value=''; $('limpar').hidden=true;
+  cb.digitando=true; $('busca').focus(); if(!cb.aberto) abrir(); else { cb.ativo=0; pintarLista(); marcarAtivo(); }
+});
+document.addEventListener('pointerdown', e=>{ if(cb.aberto && !$('combo').contains(e.target)) fechar(); });
+$('dolar').oninput = e => { const v=parseFloat(e.target.value); if(v>0){st.dolar=v; render(); tabela();} };
+$('rolo').oninput = e => { const v=parseInt(e.target.value); if(v>=3){st.rolo=v; if(st.metros>v){st.metros=v;$('metros').value=v;} render(); tabela();} };
+$('metros').oninput = e => { st.metros=+e.target.value; render(); };
+
+$('fita').addEventListener('pointerdown', e=>{
+  const mover = ev=>{
+    const r=$('fita').getBoundingClientRect();
+    const px=((ev.clientX-r.left)/r.width)*900;
+    const m=Math.round(((px-64)/(900-64-26))*st.rolo);
+    st.metros=Math.max(1,Math.min(st.rolo,m)); $('metros').value=st.metros; render();
+  };
+  mover(e);
+  const soltar=()=>{document.removeEventListener('pointermove',mover);document.removeEventListener('pointerup',soltar);};
+  document.addEventListener('pointermove',mover); document.addEventListener('pointerup',soltar);
+});
+
+$('copiar').onclick = async () => {
+  const a=atual(), dif=a.custoRolo-a.custoMetro;
+  const txt = [
+    `${a.nome} — ${a.pecaVence?'FECHAR A PEÇA':'CORTAR POR METRO'}`,
+    `Necessidade: ${st.metros} m · dólar R$ ${st.dolar.toFixed(2)} (faixa ${FAIXAS[a.fx].nome})`,
+    `Por metro: ${brl2(a.pm)}/m → ${brl(a.custoMetro)}`,
+    `Peça de ${st.rolo} m: ${brl2(a.pp)}/m → ${brl(a.custoRolo)} (${pct(a.desconto)})`,
+    `Diferença: ${dif<0?'economia de ':'custo extra de '}${brl(Math.abs(dif))}`,
+    a.pp<a.pm?`Ponto de equilíbrio: ${met(a.breakEven)} usados da peça`:'',
+    `Fonte: tabela Quaker 2026 (metro) + tabela 2025 (peça).`
+  ].filter(Boolean).join('\n');
+  try{ await navigator.clipboard.writeText(txt); $('copiar').textContent='Copiado'; }
+  catch(_){ $('copiar').textContent='Não deu para copiar'; }
+  setTimeout(()=>$('copiar').textContent='Copiar resumo',1800);
+};
+
+$('filtro').addEventListener('input', tabela);
+
+$('busca').value = DADOS[st.i][0];
+render(); tabela();
+</script>
+</body>
+</html>
