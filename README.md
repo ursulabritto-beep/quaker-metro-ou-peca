@@ -8,12 +8,31 @@ metro e quando vale fechar a peça na Quaker Decor.
 1. Busque o tecido pelo nome, pela cor ou pelo tipo — "veludo", "onyx" e "boucle"
    funcionam igual. Acento e maiúscula não importam. Setas e Enter navegam a lista.
 2. Digite o dólar comercial do dia — a ferramenta encontra sozinha a faixa da tabela.
-3. Confirme a metragem da peça fechada (o padrão de 30 m é um chute — confirme com o comercial).
-4. Arraste na fita métrica ou use o controle para dizer quantos metros o projeto pede.
+3. Digite quantos metros o projeto pede — pode ser mais que uma peça.
+4. Confirme a metragem da peça fechada (o padrão de 30 m é um chute — confirme com o comercial).
 
-A ferramenta mostra o custo dos dois caminhos, a diferença em reais e o ponto de
-equilíbrio: quantos metros da peça você precisa realmente usar para o custo empatar
-com o corte por metro.
+Também dá para arrastar sobre a fita métrica para testar outras metragens.
+
+A ferramenta compara os três caminhos possíveis e diz quantas peças comprar:
+
+- **tudo cortado por metro** — o caminho ingênuo;
+- **peças inteiras + o resto cortado** — costuma ser o mais barato;
+- **só peças, arredondando pra cima** — custa um pouco mais e deixa sobra em estoque.
+
+O ponto de virada é quanto de sobra já paga uma peça inteira. Se o resto passar disso,
+compensa levar mais uma peça em vez de cortar — e os metros a mais vêm de graça.
+
+**Exemplo.** 40 m de MILANO, peça de 30 m, dólar a R$ 5,08:
+
+| Caminho | Chega | Custo |
+|---|---|---|
+| 40 m cortados | 40 m | R$ 5.960 |
+| **1 peça + 10 m cortados** | 40 m | **R$ 3.590** |
+| 2 peças | 60 m | R$ 4.200 |
+
+A terceira linha custa R$ 610 a mais e traz 20 m de sobra — R$ 30,50 o metro extra,
+contra R$ 149,00 se você for comprar depois. Nem sempre a opção mais barata é a melhor
+compra: depende de quanto capital você quer imobilizar.
 
 ## De onde vêm os números
 

@@ -135,6 +135,23 @@
     border-radius:3px;background:#fff;font-family:"Instrument Sans",sans-serif;font-size:14px;color:var(--indigo)}
   .filtro-linha input:focus{outline:2.5px solid var(--marigold);outline-offset:1px}
   .filtro-linha span{font-family:"DM Mono",monospace;font-size:12px;color:var(--mute)}
+
+  .destaque{border-color:var(--indigo)!important;border-width:2px!important;font-size:17px!important;font-weight:500}
+  .controls{grid-template-columns:2.2fr 1fr 1fr 1fr}
+  @media(max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.controls{grid-template-columns:1fr}}
+  .dica{font-size:12px;color:var(--mute);margin:2px 0 10px;text-align:center}
+  .cenarios{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px}
+  .cenarios th{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--mute);text-align:right;padding:6px 8px;border-bottom:1px solid var(--chalk-3);font-weight:400}
+  .cenarios th:first-child{text-align:left}
+  .cenarios td{padding:9px 8px;border-bottom:1px solid var(--chalk-2);text-align:right;font-family:"DM Mono",monospace}
+  .cenarios td:first-child{text-align:left;font-family:"Instrument Sans",sans-serif}
+  .cenarios tr.melhor td{background:#F1F6F3;font-weight:600;color:var(--indigo)}
+  .cenarios tr.melhor td:first-child::after{content:" ← melhor";font-family:"DM Mono",monospace;
+    font-size:10.5px;color:var(--pine);font-weight:400;letter-spacing:.04em}
+  .cenarios .obs{font-family:"Instrument Sans",sans-serif;font-size:11.5px;color:var(--mute);
+    display:block;font-weight:400;margin-top:2px}
   @media(prefers-reduced-motion:no-preference){
     .k-move{transition:transform .18s ease}
   }
@@ -169,6 +186,11 @@
     <div class="hint" id="hintTecido"></div>
   </div>
   <div class="field">
+    <label for="metros">Metros necessários</label>
+    <input id="metros" class="mono destaque" type="number" step="1" min="1" max="2000" value="40">
+    <div class="hint" id="hintMetros"></div>
+  </div>
+  <div class="field">
     <label for="dolar">Dólar comercial (R$)</label>
     <input id="dolar" class="mono" type="number" step="0.01" min="3" max="9" value="5.08">
     <div class="hint" id="hintDolar"></div>
@@ -182,28 +204,28 @@
 
 <div class="panel">
   <div class="panel-top">
-    <div class="panel-title">Quanto você gasta, metro a metro</div>
+    <div class="panel-title">O custo, metro a metro</div>
     <div class="legend">
-      <span><i style="background:var(--indigo-2)"></i>cortar por metro</span>
-      <span><i style="background:var(--pine)"></i>fechar a peça</span>
+      <span><i style="background:var(--indigo-2)"></i>tudo cortado</span>
+      <span><i style="background:var(--pine)"></i>melhor combinação</span>
     </div>
   </div>
   <svg id="fita" viewBox="0 0 900 340" role="img" aria-labelledby="fitaDesc">
-    <desc id="fitaDesc">Comparação de custo: linha do corte por metro contra o custo fixo da peça fechada, sobre uma fita métrica.</desc>
+    <desc id="fitaDesc">Comparação de custo: a reta do corte por metro contra a serra da melhor combinação de peças fechadas, sobre uma fita métrica.</desc>
   </svg>
-  <label for="metros" class="eyebrow" style="display:block;margin-top:6px">Metros que o projeto pede</label>
-  <input id="metros" class="slider" type="range" min="1" max="30" step="1" value="8">
+  <p class="dica">Arraste sobre a fita para testar outras metragens.</p>
 </div>
 
 <div class="verdict" id="verdict">
   <p class="call" id="call">—</p>
   <p class="because" id="because"></p>
   <dl class="nums">
-    <div class="num"><dt>Cortando por metro</dt><dd id="nMetro">—</dd></div>
-    <div class="num"><dt>Fechando a peça</dt><dd id="nPeca">—</dd></div>
-    <div class="num"><dt>Diferença</dt><dd id="nDif">—</dd></div>
-    <div class="num"><dt>Vira conta a partir de</dt><dd id="nBreak">—</dd></div>
+    <div class="num"><dt>Custo total</dt><dd id="nTotal">—</dd></div>
+    <div class="num"><dt>Chega de tecido</dt><dd id="nChega">—</dd></div>
+    <div class="num"><dt>Contra tudo cortado</dt><dd id="nDif">—</dd></div>
+    <div class="num"><dt>Peça compensa a partir de</dt><dd id="nBreak">—</dd></div>
   </dl>
+  <table class="cenarios" id="cenarios"></table>
   <button class="btn" id="copiar">Copiar resumo</button>
 </div>
 
@@ -272,18 +294,45 @@ function faixaDe(d){
 }
 
 // ---- estado
-const st = {i:0, dolar:5.08, rolo:30, metros:8};
+const st = {i:0, dolar:5.08, rolo:30, metros:40};
 
+// Regra do jogo: cada peça fechada custa rolo*pp e vem inteira.
+// O resto que sobrar depois das peças inteiras pode ser cortado por metro
+// OU virar mais uma peça — o que for mais barato. O ponto de virada é o breakEven.
 function atual(){
   const f = DADOS[st.i];
   const fx = faixaDe(st.dolar);
-  const pm = f[1], pp = f[2][fx];
-  const custoRolo = pp*st.rolo;
-  const breakEven = st.rolo*pp/pm;          // metros que precisam ser usados p/ empatar
-  return {nome:f[0], cores:f[4], tipo:f[5], na26:f[3]===1, fx, pm, pp,
-          custoRolo, breakEven, desconto: pp/pm-1,
-          custoMetro: st.metros*pm,
-          pecaVence: st.metros > breakEven && pp < pm};
+  const pm = f[1], pp = f[2][fx], L = st.rolo, M = st.metros;
+  const custoPeca = pp*L;
+  const breakEven = Math.min(L, L*pp/pm);   // metros de sobra que já pagam uma peça inteira
+
+  const inteiras = Math.floor(M/L), resto = M - inteiras*L;
+
+  // três caminhos possíveis
+  const corte  = {tipo:'corte', pecas:0, cortado:M, custo:M*pm, chega:M};
+  const misto  = {tipo:'misto', pecas:inteiras, cortado:resto,
+                  custo:inteiras*custoPeca + resto*pm, chega:M};
+  const fechado= {tipo:'fechado', pecas:Math.ceil(M/L), cortado:0,
+                  custo:Math.ceil(M/L)*custoPeca, chega:Math.ceil(M/L)*L};
+
+  const opcoes = [corte, misto, fechado].filter((o,n,arr)=>
+    arr.findIndex(x=>x.pecas===o.pecas && x.cortado===o.cortado)===n);
+  const melhor = opcoes.reduce((x,y)=> y.custo < x.custo-0.005 ? y : x);
+
+  // quanto custa cada metro extra se arredondar a peça pra cima
+  const extra = fechado.chega - M;
+  const margExtra = (extra>0 && fechado.custo>melhor.custo) ? (fechado.custo-melhor.custo)/extra : null;
+
+  return {nome:f[0], cores:f[4], tipo:f[5], na26:f[3]===1, fx, pm, pp, L, M,
+          custoPeca, breakEven, desconto: pp/pm-1, inteiras, resto,
+          corte, misto, fechado, opcoes, melhor, extra, margExtra,
+          pecaVale: pp < pm};
+}
+
+// custo da melhor combinação para qualquer metragem — é a serra do gráfico
+function melhorCusto(m, a){
+  const k = Math.floor(m/a.L), r = m - k*a.L;
+  return k*a.custoPeca + Math.min(r*a.pm, a.custoPeca);
 }
 
 // ---- desenho da fita
@@ -295,12 +344,13 @@ function desenhar(){
   const svg = $('fita');
   while(svg.lastChild && svg.lastChild.nodeName!=='desc') svg.removeChild(svg.lastChild);
 
-  const W=900,H=340, L=64, R=26, T=22, tapeY=272, tapeH=42;
-  const maxY = Math.max(st.rolo*a.pm, a.custoRolo)*1.06;
-  const x = m => L + (m/st.rolo)*(W-L-R);
+  const W=900,H=340, L=64, R=26, T=26, tapeY=272, tapeH=42;
+  const nP = Math.max(1, Math.ceil(a.M/a.L));          // peças que cabem no eixo
+  const xMax = nP*a.L;                                  // eixo termina numa peça inteira
+  const maxY = Math.max(xMax*a.pm, nP*a.custoPeca)*1.06;
+  const x = m => L + (m/xMax)*(W-L-R);
   const y = v => tapeY-14 - (v/maxY)*(tapeY-14-T);
 
-  // grade + eixo de custo
   for(let g=0; g<=4; g++){
     const v = maxY*g/4;
     svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:'#E3E7E2','stroke-width':1}));
@@ -308,49 +358,69 @@ function desenhar(){
     t.textContent = g===0?'0':brl(v); svg.appendChild(t);
   }
 
+  // divisas das peças fechadas
+  for(let k=1; k<=nP; k++){
+    svg.appendChild(el('line',{x1:x(k*a.L),x2:x(k*a.L),y1:T-4,y2:tapeY,stroke:'#D3D9D3','stroke-width':1,'stroke-dasharray':'2 5'}));
+    const t=el('text',{x:x(k*a.L)-4,y:T+2,'text-anchor':'end',fill:'#A8B0B4','font-size':10,'font-family':'DM Mono, monospace'});
+    t.textContent=k+(k===1?' peça':' peças'); svg.appendChild(t);
+  }
+
   // fita métrica
   svg.appendChild(el('rect',{x:L,y:tapeY,width:W-L-R,height:tapeH,fill:'#E8C24A',rx:2}));
   svg.appendChild(el('rect',{x:L,y:tapeY,width:W-L-R,height:tapeH,fill:'none',stroke:'#16233C','stroke-width':1.5,rx:2}));
-  const passo = st.rolo>60?5:1;
-  for(let m=0;m<=st.rolo;m+=passo){
-    const grande = m%5===0;
+  const passo = xMax>150?10:(xMax>60?5:1), rotulo = xMax>150?50:(xMax>60?10:5);
+  for(let m=0;m<=xMax;m+=passo){
+    const grande = m%rotulo===0;
     svg.appendChild(el('line',{x1:x(m),x2:x(m),y1:tapeY,y2:tapeY+(grande?15:8),stroke:'#16233C','stroke-width':grande?1.6:.9}));
-    if(grande && (st.rolo<=40 || m%10===0)){
+    if(grande){
       const t=el('text',{x:x(m),y:tapeY+31,'text-anchor':'middle',fill:'#16233C','font-size':12,'font-family':'DM Mono, monospace'});
       t.textContent=m; svg.appendChild(t);
     }
   }
 
-  // linha da peça (custo fixo) + área
-  svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(a.custoRolo),y2:y(a.custoRolo),stroke:'#2E6B5E','stroke-width':2.5}));
-  const lp=el('text',{x:W-R-4,y:y(a.custoRolo)-8,'text-anchor':'end',fill:'#2E6B5E','font-size':12,'font-family':'DM Mono, monospace','font-weight':500});
-  lp.textContent='peça fechada '+brl(a.custoRolo); svg.appendChild(lp);
+  // reta do corte por metro
+  svg.appendChild(el('line',{x1:x(0),x2:x(xMax),y1:y(0),y2:y(xMax*a.pm),stroke:'#2B3F63','stroke-width':2.5}));
+  const lm=el('text',{x:x(xMax)-4,y:y(xMax*a.pm)-9,'text-anchor':'end',fill:'#2B3F63','font-size':12,'font-family':'DM Mono, monospace','font-weight':500});
+  lm.textContent='cortado '+brl2(a.pm)+'/m'; svg.appendChild(lm);
 
-  // linha do metro
-  svg.appendChild(el('line',{x1:x(0),x2:x(st.rolo),y1:y(0),y2:y(st.rolo*a.pm),stroke:'#2B3F63','stroke-width':2.5}));
-  const lm=el('text',{x:x(st.rolo)-4,y:y(st.rolo*a.pm)-9,'text-anchor':'end',fill:'#2B3F63','font-size':12,'font-family':'DM Mono, monospace','font-weight':500});
-  lm.textContent='metro '+brl2(a.pm)+'/m'; svg.appendChild(lm);
+  // serra da melhor combinação: sobe cortando até o breakEven, depois deita porque a peça já foi paga
+  if(a.pecaVale){
+    let d = 'M '+x(0)+' '+y(0);
+    for(let k=0;k<nP;k++){
+      const base = k*a.custoPeca;
+      d += ' L '+x(k*a.L+a.breakEven)+' '+y(base+a.custoPeca);
+      d += ' L '+x((k+1)*a.L)+' '+y(base+a.custoPeca);
+    }
+    svg.appendChild(el('path',{d, fill:'none', stroke:'#2E6B5E','stroke-width':2.5,'stroke-linejoin':'round'}));
+    const lp=el('text',{x:x(xMax)-4,y:y(nP*a.custoPeca)+18,'text-anchor':'end',fill:'#2E6B5E','font-size':12,'font-family':'DM Mono, monospace','font-weight':500});
+    lp.textContent='com peça '+brl2(a.pp)+'/m'; svg.appendChild(lp);
 
-  // cruzamento
-  if(a.breakEven<=st.rolo && a.pp<a.pm){
-    const bx=x(a.breakEven);
-    svg.appendChild(el('line',{x1:bx,x2:bx,y1:y(a.custoRolo),y2:tapeY,stroke:'#16233C','stroke-width':1,'stroke-dasharray':'3 4'}));
-    svg.appendChild(el('circle',{cx:bx,cy:y(a.custoRolo),r:5,fill:'#fff',stroke:'#16233C','stroke-width':2}));
-    const bt=el('text',{x:bx,y:y(a.custoRolo)-14,'text-anchor':'middle',fill:'#16233C','font-size':12,'font-family':'DM Mono, monospace','font-weight':500});
-    bt.textContent='vira conta em '+met(a.breakEven); svg.appendChild(bt);
+    // marca o ponto de virada dentro da peça em curso
+    const bx = x(a.inteiras*a.L + a.breakEven);
+    if(a.breakEven < a.L){
+      svg.appendChild(el('circle',{cx:bx,cy:y((a.inteiras+1)*a.custoPeca),r:4.5,fill:'#fff',stroke:'#2E6B5E','stroke-width':2}));
+      const bt=el('text',{x:bx,y:y((a.inteiras+1)*a.custoPeca)-12,'text-anchor':'middle',fill:'#2E6B5E','font-size':11.5,'font-family':'DM Mono, monospace'});
+      bt.textContent='+'+met(a.breakEven); svg.appendChild(bt);
+    }
   }
 
-  // marcador dos metros pedidos
-  const mx=x(st.metros);
+  // marcador da metragem pedida
+  const mx=x(a.M);
   svg.appendChild(el('line',{x1:mx,x2:mx,y1:T-8,y2:tapeY+tapeH,stroke:'#16233C','stroke-width':2}));
-  const cap=el('rect',{x:mx-30,y:T-22,width:60,height:18,fill:'#16233C',rx:2});
-  svg.appendChild(cap);
-  const ct=el('text',{x:mx,y:T-9,'text-anchor':'middle',fill:'#fff','font-size':11.5,'font-family':'DM Mono, monospace'});
-  ct.textContent=st.metros+' m'; svg.appendChild(ct);
-  svg.appendChild(el('circle',{cx:mx,cy:y(a.custoMetro),r:5.5,fill:'#2B3F63',stroke:'#fff','stroke-width':2}));
+  svg.appendChild(el('rect',{x:mx-34,y:T-24,width:68,height:18,fill:'#16233C',rx:2}));
+  const ct=el('text',{x:mx,y:T-11,'text-anchor':'middle',fill:'#fff','font-size':11.5,'font-family':'DM Mono, monospace'});
+  ct.textContent=a.M+' m'; svg.appendChild(ct);
+  svg.appendChild(el('circle',{cx:mx,cy:y(a.M*a.pm),r:5,fill:'#2B3F63',stroke:'#fff','stroke-width':2}));
+  if(a.pecaVale) svg.appendChild(el('circle',{cx:mx,cy:y(melhorCusto(a.M,a)),r:5.5,fill:'#2E6B5E',stroke:'#fff','stroke-width':2}));
 }
 
 // ---- verdito
+function plano(o, a){
+  if(o.pecas===0) return o.cortado+' m cortados';
+  const p = o.pecas+(o.pecas===1?' peça fechada':' peças fechadas');
+  return o.cortado>0 ? p+' + '+o.cortado+' m cortados' : p;
+}
+
 function render(){
   const a = atual();
   desenhar();
@@ -358,27 +428,46 @@ function render(){
   if(!cb.aberto) $('busca').value = a.nome;
   $('hintTecido').innerHTML = a.tipo + (a.cores?' · '+a.cores:'') + (a.na26?'':' · <b>fora da tabela 2026</b>');
   $('hintDolar').innerHTML = 'Faixa <b>'+FAIXAS[a.fx].nome+'</b>';
-  $('metros').max = st.rolo;
+  $('hintMetros').innerHTML = a.M>=a.L ? '<b>'+(a.M/a.L).toFixed(1).replace('.',',')+'</b> peças de '+a.L+' m' : 'menos de uma peça';
 
-  const v=$('verdict'), dif=a.custoRolo-a.custoMetro;
-  v.className = 'verdict '+(a.pecaVence?'peca':'metro');
+  const v=$('verdict'), econ = a.corte.custo - a.melhor.custo;
+  v.className = 'verdict '+(a.melhor.pecas>0?'peca':'metro');
 
-  if(a.pp>=a.pm){
-    $('call').innerHTML = 'Corte por metro.';
-    $('because').textContent = 'Com o dólar nessa faixa, a peça de '+a.nome+' sai a '+brl2(a.pp)+' o metro, contra '+brl2(a.pm)+' cortando. Fechar peça aqui só imobiliza dinheiro sem desconto nenhum.';
-  } else if(a.pecaVence){
-    const sobra = st.rolo-a.breakEven;
-    $('call').innerHTML = 'Feche a <span class="accent">peça</span>.';
-    $('because').textContent = 'Os '+st.metros+' m que você precisa já passam do ponto de equilíbrio ('+met(a.breakEven)+'). Você economiza '+brl(-dif)+' e ainda sobram '+met(st.rolo-st.metros)+' de tecido no estoque. Dá para desperdiçar até '+met(sobra)+' da peça e ainda assim ter valido a pena.';
+  $('call').innerHTML = a.melhor.pecas>0
+    ? 'Compre <span class="accent">'+plano(a.melhor,a)+'</span>.'
+    : 'Corte os '+a.M+' m por metro.';
+
+  if(!a.pecaVale){
+    $('because').textContent = 'Com o dólar nessa faixa, a peça de '+a.nome+' sai a '+brl2(a.pp)+' o metro contra '+brl2(a.pm)+' cortando. Não existe desconto para capturar aqui — fechar peça só imobilizaria dinheiro.';
+  } else if(a.melhor.pecas===0){
+    $('because').textContent = 'Os '+a.M+' m ficam abaixo do ponto de virada: uma peça inteira de '+a.L+' m custaria '+brl(a.custoPeca)+', mais que os '+brl(a.corte.custo)+' do corte. A peça só passa a compensar a partir de '+met(a.breakEven)+' — faltam '+Math.ceil(a.breakEven-a.M)+' m de demanda. Se tiver outro projeto na fila com o mesmo tecido, vale somar antes de decidir.';
+  } else if(a.resto===0){
+    $('because').textContent = 'A metragem fecha exatamente em '+a.melhor.pecas+(a.melhor.pecas===1?' peça inteira':' peças inteiras')+', sem sobra e sem corte. Economia de '+brl(econ)+' contra cortar os '+a.M+' m por metro.';
+  } else if(a.melhor.tipo==='fechado' && a.extra>0){
+    $('because').textContent = 'O resto de '+met(a.resto)+' já passa do ponto de virada ('+met(a.breakEven)+'), então a última peça inteira sai mais barata que cortar esse resto. Você economiza '+brl(econ)+' contra cortar tudo e ainda leva '+met(a.extra)+' de sobra para o estoque, sem pagar nada a mais por eles.';
+  } else if(a.melhor.tipo==='misto'){
+    const cauda = a.margExtra
+      ? ' Arredondar para '+a.fechado.pecas+' peças custaria '+brl(a.fechado.custo-a.melhor.custo)+' a mais e traria '+met(a.extra)+' de sobra — dá '+brl2(a.margExtra)+' o metro extra, contra '+brl2(a.pm)+' se você fosse comprar depois.'
+      : '';
+    const sujeito = a.inteiras===1 ? 'A peça inteira cobre ' : 'As '+a.inteiras+' peças inteiras cobrem ';
+    $('because').textContent = sujeito+(a.inteiras*a.L)+' m e o resto de '+met(a.resto)+' fica abaixo do ponto de virada ('+met(a.breakEven)+'), então compensa cortar. Economia de '+brl(econ)+' contra cortar tudo.'+cauda;
   } else {
-    const faltam = Math.ceil(a.breakEven)-st.metros;
-    $('call').innerHTML = 'Corte por metro.';
-    $('because').textContent = 'Para '+st.metros+' m, a peça custaria '+brl(dif)+' a mais. Ela só passa a compensar a partir de '+met(a.breakEven)+' — faltam '+faltam+' m de demanda. Se houver outro projeto na fila usando o mesmo tecido, vale somar antes de decidir.';
+    $('because').textContent = 'A metragem fecha exatamente em '+a.melhor.pecas+(a.melhor.pecas===1?' peça':' peças')+', sem sobra e sem corte. Economia de '+brl(econ)+' contra cortar os '+a.M+' m.';
   }
-  $('nMetro').innerHTML = brl(a.custoMetro)+' <small>'+st.metros+' m</small>';
-  $('nPeca').innerHTML = brl(a.custoRolo)+' <small>'+st.rolo+' m · '+pct(a.desconto)+'</small>';
-  $('nDif').innerHTML = (dif<0?'−':'+')+brl(Math.abs(dif));
-  $('nBreak').innerHTML = a.pp<a.pm ? met(a.breakEven)+' <small>usados</small>' : '—';
+
+  $('nTotal').innerHTML = brl(a.melhor.custo)+' <small>'+brl2(a.melhor.custo/a.melhor.chega)+'/m</small>';
+  $('nChega').innerHTML = met(a.melhor.chega)+(a.melhor.chega>a.M?' <small>+'+met(a.melhor.chega-a.M)+' de sobra</small>':' <small>exato</small>');
+  $('nDif').innerHTML = econ>0.5 ? '−'+brl(econ)+' <small>'+pct(econ/a.corte.custo)+' menos</small>' : '—';
+  $('nBreak').innerHTML = a.pecaVale ? met(a.breakEven)+' <small>de sobra</small>' : '—';
+
+  $('cenarios').innerHTML = '<thead><tr><th>Caminho</th><th>Chega</th><th>Custo</th><th>R$/m efetivo</th></tr></thead><tbody>'
+    + a.opcoes.slice().sort((x,z)=>x.custo-z.custo).map(o=>`
+      <tr class="${o===a.melhor?'melhor':''}">
+        <td>${plano(o,a)}${o.chega>a.M?'<span class="obs">sobram '+met(o.chega-a.M)+' no estoque</span>':''}</td>
+        <td>${met(o.chega)}</td>
+        <td>${brl(o.custo)}</td>
+        <td>${brl2(o.custo/o.chega)}</td>
+      </tr>`).join('') + '</tbody>';
 }
 
 // ---- tabela
@@ -420,9 +509,21 @@ function ordenados(){
 }
 
 function pintarLista(){
+  let q_;
   const q = $('busca').value.trim();
   const termos = cb.digitando ? termosDe(q) : [];
   cb.achados = ordenados().filter(o => !termos.length || combina(o.i, termos));
+  if(termos.length){
+    const q = chave(q_ = $('busca').value.trim());
+    const posto = o => {
+      const nome = chave(o.nome);
+      if(nome === q) return 0;                              // nome exato
+      if(nome.startsWith(q)) return 1;                      // nome começa com o que foi digitado
+      if(termos.every(t=>nome.includes(t))) return 2;       // todos os termos estão no nome
+      return 3;                                             // casou por cor ou tipo
+    };
+    cb.achados.sort((x,z)=> posto(x)-posto(z) || x.nome.localeCompare(z.nome,'pt-BR'));
+  }
 
   if(!cb.achados.length){
     $('lista').innerHTML = '<li class="vazio">Nenhum tecido com “'+esc(q)+'”. Só os 41 tecidos com opção de peça aparecem aqui — os outros a Quaker vende apenas por metro.</li>';
@@ -503,15 +604,16 @@ $('limpar').addEventListener('mousedown', e=>{
 });
 document.addEventListener('pointerdown', e=>{ if(cb.aberto && !$('combo').contains(e.target)) fechar(); });
 $('dolar').oninput = e => { const v=parseFloat(e.target.value); if(v>0){st.dolar=v; render(); tabela();} };
-$('rolo').oninput = e => { const v=parseInt(e.target.value); if(v>=3){st.rolo=v; if(st.metros>v){st.metros=v;$('metros').value=v;} render(); tabela();} };
-$('metros').oninput = e => { st.metros=+e.target.value; render(); };
+$('rolo').oninput = e => { const v=parseInt(e.target.value); if(v>=3&&v<=200){st.rolo=v; render(); tabela();} };
+$('metros').oninput = e => { const v=parseInt(e.target.value); if(v>=1&&v<=2000){st.metros=v; render();} };
 
 $('fita').addEventListener('pointerdown', e=>{
+  const xMax = Math.max(1, Math.ceil(st.metros/st.rolo))*st.rolo;
   const mover = ev=>{
     const r=$('fita').getBoundingClientRect();
     const px=((ev.clientX-r.left)/r.width)*900;
-    const m=Math.round(((px-64)/(900-64-26))*st.rolo);
-    st.metros=Math.max(1,Math.min(st.rolo,m)); $('metros').value=st.metros; render();
+    const m=Math.round(((px-64)/(900-64-26))*xMax);
+    st.metros=Math.max(1,Math.min(xMax,m)); $('metros').value=st.metros; render();
   };
   mover(e);
   const soltar=()=>{document.removeEventListener('pointermove',mover);document.removeEventListener('pointerup',soltar);};
@@ -519,16 +621,18 @@ $('fita').addEventListener('pointerdown', e=>{
 });
 
 $('copiar').onclick = async () => {
-  const a=atual(), dif=a.custoRolo-a.custoMetro;
+  const a=atual(), econ=a.corte.custo-a.melhor.custo;
   const txt = [
-    `${a.nome} — ${a.pecaVence?'FECHAR A PEÇA':'CORTAR POR METRO'}`,
-    `Necessidade: ${st.metros} m · dólar R$ ${st.dolar.toFixed(2)} (faixa ${FAIXAS[a.fx].nome})`,
-    `Por metro: ${brl2(a.pm)}/m → ${brl(a.custoMetro)}`,
-    `Peça de ${st.rolo} m: ${brl2(a.pp)}/m → ${brl(a.custoRolo)} (${pct(a.desconto)})`,
-    `Diferença: ${dif<0?'economia de ':'custo extra de '}${brl(Math.abs(dif))}`,
-    a.pp<a.pm?`Ponto de equilíbrio: ${met(a.breakEven)} usados da peça`:'',
+    `${a.nome} — ${a.M} m`,
+    `→ ${plano(a.melhor,a).toUpperCase()} = ${brl(a.melhor.custo)}`,
+    ``,
+    `Dólar R$ ${st.dolar.toFixed(2)} (faixa ${FAIXAS[a.fx].nome})`,
+    `Metro ${brl2(a.pm)}/m · peça ${brl2(a.pp)}/m (${pct(a.desconto)}) · peça de ${a.L} m`,
+    ...a.opcoes.slice().sort((x,z)=>x.custo-z.custo).map(o=>
+      `${o===a.melhor?'>':' '} ${plano(o,a)}: ${brl(o.custo)} — chega ${met(o.chega)}`),
+    econ>0.5 ? `Economia de ${brl(econ)} contra cortar tudo por metro.` : '',
     `Fonte: tabela Quaker 2026 (metro) + tabela 2025 (peça).`
-  ].filter(Boolean).join('\n');
+  ].filter(l=>l!==undefined).join('\n');
   try{ await navigator.clipboard.writeText(txt); $('copiar').textContent='Copiado'; }
   catch(_){ $('copiar').textContent='Não deu para copiar'; }
   setTimeout(()=>$('copiar').textContent='Copiar resumo',1800);
@@ -537,6 +641,7 @@ $('copiar').onclick = async () => {
 $('filtro').addEventListener('input', tabela);
 
 $('busca').value = DADOS[st.i][0];
+$('metros').value = st.metros;
 render(); tabela();
 </script>
 </body>
