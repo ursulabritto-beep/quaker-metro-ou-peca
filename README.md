@@ -3,6 +3,12 @@
 Ferramenta interna do Hstudio para decidir, tecido a tecido, quando vale cortar por
 metro e quando vale fechar a peça na Quaker Decor.
 
+## Versão
+
+Dados da tabela Quaker **2026 v2** (recebida com a aba de peça inclusa). Seis tecidos
+que estavam descontinuados na primeira 2026 voltaram: BISON, BURL, CAYMAN, EFFIE, FARGO
+e GENTLE. Nenhum preço por metro mudou em relação à versão anterior.
+
 ## Como usar
 
 1. Busque o tecido pelo nome, pela cor ou pelo tipo — "veludo", "onyx" e "boucle"
@@ -38,14 +44,14 @@ compra: depende de quanto capital você quer imobilizar.
 
 | Dado | Fonte |
 |---|---|
-| Preço por metro | Tabela Quaker 2026, aba TABELA GERAL |
-| Preço da peça por faixa de dólar | Tabela Quaker 2025, aba PEÇAS |
+| Preço por metro | Tabela Quaker 2026 v2, aba TABELA GERAL |
+| Preço da peça por faixa de dólar | Tabela Quaker 2026 v2, aba Preço Peça |
 
-A tabela 2026 não traz aba PEÇAS. Peça a versão atualizada ao comercial antes de
-fechar pedidos grandes e atualize a constante `DADOS` no `index.html`.
+Tudo vem da mesma tabela agora — a v2 já traz a aba de peça, então os preços de peça
+não são mais herdados de 2025.
 
-Cinco tecidos (BURL, EFFIE, OSSA, SACKCLOTH, SLUBBY) têm preço de peça mas saíram da
-tabela 2026 — aparecem marcados na lista.
+São 43 tecidos com opção de peça. Só o OSSA tem preço de peça sem aparecer na TABELA
+GERAL — é vendido apenas em peça fechada, e por isso aparece marcado na lista.
 
 ## Manutenção
 
@@ -53,7 +59,7 @@ Tudo vive num arquivo só, o `index.html`. Não tem build, não tem dependência
 Para mudar preços, edite o array `DADOS` no fim do arquivo. Cada linha é:
 
 ```js
-["TECIDO", precoMetro, [p1,p2,p3,p4,p5,p6], estaNaTabela2026, "CORES", "TIPO", "CORES DA TABELA DE PEÇAS"]
+["TECIDO", precoMetro, [p1,p2,p3,p4,p5,p6], estaNaTabelaGeral, "CORES", "TIPO", "CORES DA ABA DE PEÇA"]
 ```
 
 Os dois últimos campos de texto alimentam a busca — quanto mais completos, mais fácil
