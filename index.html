@@ -201,6 +201,18 @@
     table.full .opt-esconde{display:none}
     .consulta-topo select{flex:1}
   }
+
+  /* faixa de preço do tecido */
+  .faixa{display:inline-block;font-family:"DM Mono",monospace;font-size:10px;font-weight:500;
+    letter-spacing:.03em;padding:1px 6px;border-radius:3px;vertical-align:middle;line-height:1.5}
+  .faixa.p1{background:#E4EEE9;color:#215B4E}
+  .faixa.p2{background:#F4E4BC;color:#8A6410}
+  .faixa.p3{background:#D2DCEA;color:#2B3F63}
+  .faixa.p4{background:#16233C;color:#fff}
+  .opt.ativo .faixa{filter:brightness(1.08)}
+  .legenda-faixa{display:flex;gap:14px;flex-wrap:wrap;font-family:"DM Mono",monospace;font-size:11.5px;
+    color:var(--mute);margin:2px 0 16px}
+  .legenda-faixa span{white-space:nowrap}
   @media(prefers-reduced-motion:no-preference){
     .k-move{transition:transform .18s ease}
   }
@@ -287,13 +299,19 @@
 
 <h2>Os 43 tecidos com opção de peça</h2>
 <p class="sub">Desconto da peça sobre o preço por metro, na faixa de dólar acima. Clique no nome para carregar na calculadora.</p>
+<div class="legenda-faixa">
+  <span><span class="faixa p1">P1</span> até R$ 125/m</span>
+  <span><span class="faixa p2">P2</span> R$ 125–185/m</span>
+  <span><span class="faixa p3">P3</span> R$ 185–250/m</span>
+  <span><span class="faixa p4">P4</span> acima de R$ 250/m</span>
+</div>
 <div class="filtro-linha">
   <input id="filtro" type="search" placeholder="Filtrar a lista" aria-label="Filtrar a lista de tecidos">
   <span id="contaTabela"></span>
 </div>
 <table>
   <thead><tr>
-    <th>Tecido</th><th>Metro</th><th>Peça (R$/m)</th><th>Desconto</th><th>Compensa a partir de</th>
+    <th>Tecido</th><th>Faixa</th><th>Metro</th><th>Peça (R$/m)</th><th>Desconto</th><th>Compensa a partir de</th>
   </tr></thead>
   <tbody id="tbody"></tbody>
 </table>
@@ -303,12 +321,20 @@
   <div class="consulta-topo">
     <input id="cSearch" type="search" placeholder="Buscar tecido, cor, tipo ou composição" aria-label="Buscar na tabela de preços">
     <select id="cFam" aria-label="Filtrar por tipo de tecido"><option value="">Todos os tipos</option></select>
+    <select id="cFaixa" aria-label="Filtrar por faixa de preço">
+      <option value="">Todas as faixas</option>
+      <option value="P1">P1 · até R$ 125/m</option>
+      <option value="P2">P2 · R$ 125–185/m</option>
+      <option value="P3">P3 · R$ 185–250/m</option>
+      <option value="P4">P4 · acima de R$ 250/m</option>
+    </select>
     <span class="consulta-conta" id="cConta"></span>
   </div>
   <div class="tabela-wrap"><div class="rolagem">
     <table class="full" id="cTabela">
       <thead><tr>
         <th data-sort="t">Tecido <span class="seta">▲▼</span></th>
+        <th data-sort="fx">Faixa <span class="seta">▲▼</span></th>
         <th data-sort="tipo" class="tx opt-esconde">Tipo <span class="seta">▲▼</span></th>
         <th data-sort="m">Metro <span class="seta">▲▼</span></th>
         <th data-sort="sug" class="opt-esconde">Sugerido <span class="seta">▲▼</span></th>
@@ -340,6 +366,14 @@ const FAIXAS = [
 ];
 
 const $ = id => document.getElementById(id);
+// faixa de preço por custo/metro: P1 até 125 · P2 até 185 · P3 até 250 · P4 acima
+function faixaTecido(m){
+  if(m<=125) return {c:'p1', n:'P1'};
+  if(m<=185) return {c:'p2', n:'P2'};
+  if(m<=250) return {c:'p3', n:'P3'};
+  return {c:'p4', n:'P4'};
+}
+const faixaTag = m => { const f=faixaTecido(m); return `<span class="faixa ${f.c}">${f.n}</span>`; };
 const chave = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -504,7 +538,7 @@ function render(){
   desenhar();
 
   if(!cb.aberto) $('busca').value = a.nome;
-  $('hintTecido').innerHTML = a.tipo + (a.cores?' · '+a.cores:'') + (a.na26?'':' · <b>fora da tabela 2026</b>');
+  $('hintTecido').innerHTML = faixaTag(a.pm) + ' ' + a.tipo + (a.cores?' · '+a.cores:'') + (a.na26?'':' · <b>fora da tabela 2026</b>');
   $('hintDolar').innerHTML = 'Faixa <b>'+FAIXAS[a.fx].nome+'</b>';
   $('hintMetros').innerHTML = a.M>=a.L ? '<b>'+(a.M/a.L).toFixed(1).replace('.',',')+'</b> peças de '+a.L+' m' : 'menos de uma peça';
 
@@ -558,12 +592,13 @@ function tabela(){
     .sort((x,z)=>x.desc-z.desc);
   $('contaTabela').textContent = termos.length ? linhas.length+(linhas.length===1?' tecido':' tecidos')+' de 43' : '';
   if(!linhas.length){
-    $('tbody').innerHTML = '<tr><td colspan="5" class="vazio" style="text-align:left">Nenhum tecido com esse termo.</td></tr>';
+    $('tbody').innerHTML = '<tr><td colspan="6" class="vazio" style="text-align:left">Nenhum tecido com esse termo.</td></tr>';
     return;
   }
   $('tbody').innerHTML = linhas.map(o=>`
     <tr class="${o.off?'off':''}">
       <td data-i="${o.i}">${realcar(o.nome, termos)}</td>
+      <td>${faixaTag(o.pm)}</td>
       <td>${brl2(o.pm)}</td>
       <td>${brl2(o.pp)}</td>
       <td><span class="bar"><span style="width:${Math.max(0,Math.min(100,-o.desc*140))}%;background:${o.desc<0?'var(--pine)':'var(--marigold)'}"></span><b>${o.desc>0?'+':''}${pct(o.desc)}</b></span></td>
@@ -618,7 +653,7 @@ function pintarLista(){
         <span class="opt-sub">${realcar(o.sub, termos)}</span>
       </span>
       <span class="opt-dir">
-        <span class="opt-metro">${brl2(o.pm)}/m</span>
+        <span class="opt-metro">${faixaTag(o.pm)} ${brl2(o.pm)}/m</span>
         <span class="opt-desc" style="color:${o.desc<0?'var(--pine)':'var(--marigold)'}">${o.desc>0?'+':''}${pct(o.desc)}</span>
       </span>
     </li>`).join('');
@@ -724,7 +759,7 @@ const TODOS = [["ABONO","Bouclé","BOUCLE","NATURAL","27% ALGODÃO/ 2% POLIAMIDA
 // índice: [0]nome [1]familia [2]tipo [3]cor [4]comp [5]metro [6]sug [7]capaSV [8]capaCV [9]larg [10]ncm [11]rapport [12]gm2
 const COM_PECA = new Set(DADOS.map(f => f[0]));
 
-const cSt = {q:'', fam:'', ordem:'t', dir:1, aberta:null};
+const cSt = {q:'', fam:'', faixa:'', ordem:'t', dir:1, aberta:null};
 
 function cFamilias(){
   const fs = [...new Set(TODOS.map(t=>t[1]))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
@@ -736,11 +771,12 @@ function cFiltrados(){
   const termos = termosDe(cSt.q);
   let out = TODOS.filter(t=>{
     if(cSt.fam && t[1]!==cSt.fam) return false;
+    if(cSt.faixa && faixaTecido(t[5]).n!==cSt.faixa) return false;
     if(!termos.length) return true;
     const palheiro = chave(t[0]+' '+t[2]+' '+t[3]+' '+t[4]);
     return termos.every(x=>palheiro.includes(x));
   });
-  const col = {t:0, tipo:2, m:5, sug:6, larg:9}[cSt.ordem];
+  const col = {t:0, fx:5, tipo:2, m:5, sug:6, larg:9}[cSt.ordem];
   out.sort((a,b)=>{
     let x=a[col], y=b[col];
     if(cSt.ordem==='larg'){ x=parseFloat(String(x).replace(',','.'))||0; y=parseFloat(String(y).replace(',','.'))||0; }
@@ -763,6 +799,7 @@ function cRender(){
     const linha = `
       <tr data-t="${t[0].replace(/"/g,'&quot;')}">
         <td>${cRealca(t[0],termos)}${selo}</td>
+        <td>${faixaTag(t[5])}</td>
         <td class="tx opt-esconde">${cRealca(t[2],termos)}</td>
         <td>${brl2(t[5])}</td>
         <td class="opt-esconde">${t[6]!=null?brl(t[6]):'—'}</td>
@@ -771,12 +808,13 @@ function cRender(){
     if(cSt.aberta===t[0]){
       const capa = (r,rot)=> r ? (r[0]===r[1]?brl(r[0]):brl(r[0])+' a '+brl(r[1])) : '—';
       return linha + `
-      <tr class="det"><td colspan="5"><div class="det-inner">
+      <tr class="det"><td colspan="6"><div class="det-inner">
         <div><dt>Composição</dt>${t[4]||'—'}</div>
         <div><dt>Cores</dt>${t[3]||'—'}</div>
         <div><dt>Classificação fiscal</dt>${t[10]||'—'}</div>
         <div><dt>Rapport</dt>${t[11]||'—'}</div>
         <div><dt>Gramatura</dt>${t[12]!=null?t[12]+' g/m²':'—'}</div>
+        <div><dt>Faixa de preço</dt>${faixaTag(t[5])} <span style="font-size:11px;color:var(--mute)">(${faixaTecido(t[5]).n})</span></div>
         <div><dt>Preço sugerido</dt>${t[6]!=null?brl(t[6]):'—'}</div>
         <div><dt>Capa de almofada · sem vivo</dt>${capa(t[7])}</div>
         <div><dt>Capa de almofada · com vivo</dt>${capa(t[8])}</div>
@@ -795,6 +833,7 @@ function cRender(){
 
 $('cSearch').addEventListener('input', e=>{ cSt.q=e.target.value; cSt.aberta=null; cRender(); });
 $('cFam').addEventListener('change', e=>{ cSt.fam=e.target.value; cSt.aberta=null; cRender(); });
+$('cFaixa').addEventListener('change', e=>{ cSt.faixa=e.target.value; cSt.aberta=null; cRender(); });
 document.querySelectorAll('#cTabela thead th[data-sort]').forEach(th=>{
   th.addEventListener('click', ()=>{
     const c=th.dataset.sort;

@@ -9,6 +9,31 @@ Dados da tabela Quaker **2026 v2** (recebida com a aba de peça inclusa). Seis t
 que estavam descontinuados na primeira 2026 voltaram: BISON, BURL, CAYMAN, EFFIE, FARGO
 e GENTLE. Nenhum preço por metro mudou em relação à versão anterior.
 
+## Faixa de preço
+
+Cada tecido recebe uma faixa pelo custo por metro, mostrada nas duas abas:
+
+| Faixa | Custo por metro |
+|---|---|
+| **P1** | até R$ 125 |
+| **P2** | R$ 125 a R$ 185 |
+| **P3** | R$ 185 a R$ 250 |
+| **P4** | acima de R$ 250 |
+
+Os limites são inclusivos no piso: R$ 125 é P1, R$ 185 é P2, R$ 250 é P3. Na aba de
+consulta dá para filtrar e ordenar por faixa. Para mudar os limites, edite a função
+`faixaTecido` no `index.html`.
+
+## Abas
+
+A ferramenta tem duas abas:
+
+- **Metro ou peça?** — a calculadora de compra (metro x peça fechada).
+- **Tabela de preços 2026** — consulta de todos os 511 tecidos da tabela Quaker 2026 v2,
+  com busca por nome, cor, tipo ou composição, filtro por tipo de tecido, ordenação por
+  coluna e detalhe por linha (composição, cores, NCM, gramatura, preço de capa). Tecidos
+  com opção de peça trazem o selo **peça**.
+
 ## Como usar
 
 1. Busque o tecido pelo nome, pela cor ou pelo tipo — "veludo", "onyx" e "boucle"
